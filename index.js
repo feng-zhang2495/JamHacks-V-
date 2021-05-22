@@ -1,14 +1,16 @@
 const fs = require('fs');
 
 const Discord = require('discord.js');
+var cron = require("cron");
 const client = new Discord.Client();
 
-
+const ytdl = require("ytdl-core");
+const queue = new Map();
 const dotenv = require('dotenv');
 dotenv.config();
 
 
-const { prefix, swearWords, motivational, memery } = require('./config.json');
+const { prefix, swearWords, motivational, memery, phrases } = require('./config.json');
 
 client.commands = new Discord.Collection();
 
@@ -22,6 +24,7 @@ var recordChannel;
 var announceChannel;
 const recordUsers = [];
 const recordNums = [];
+const dailyevents = [];
 
 client.on('message', message => {
     //if the message is from the bot exit
@@ -57,10 +60,10 @@ client.on('message', message => {
     console.log(message.content);
 
 
-
     //If the message doesn't start with prefix it exits 
-    if (!message.content.startsWith(prefix) || message.author.bot) return;
-   
+    if (!message.content.startsWith(prefix) || message.author.bot) {
+		return;
+	}
     const args = message.content.slice(prefix.length).trim().split(' ');
 	const command = args.map(x => x.toLowerCase());
     /*if (!client.commands.has(command)) return;
@@ -73,6 +76,101 @@ client.on('message', message => {
 	}*/
 
     //commands 
+ 
+
+    
+    if (message.content.includes('?')) {
+        if (Math.floor(Math.random() * 20) < 1) {
+            message.channel.send(phrases[Math.floor(Math.random() * 7)]);
+            return;
+        }
+    }
+    
+    const serverQueue = queue.get(message.guild.id);
+    
+    if (message.content.startsWith(`${prefix}play`)) {
+        execute(message, serverQueue);
+        return;
+
+    }
+    
+    //function stop() {pass
+    //}
+    
+    async function execute(message, serverQueue) {
+        const args = message.content.split(" ");
+      
+        const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel) {
+          	return message.channel.send(
+            	"You need to be in a voice channel to play music!"
+          	);
+		}
+        const permissions = voiceChannel.permissionsFor(message.client.user);
+        if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
+          	return message.channel.send(
+            	"I need the permissions to join and speak in your voice channel!"
+          	);
+        }
+      
+        const songInfo = await ytdl.getInfo(args[1]);
+        const song = {
+            title: songInfo.videoDetails.title,
+            url: songInfo.videoDetails.video_url,
+        };
+      
+        if (!serverQueue) {
+          	const queueContruct = {
+            	textChannel: message.channel,
+            	voiceChannel: voiceChannel,
+            	connection: null,
+            	songs: [],
+            	volume: 5,
+            	playing: true
+          	};
+      
+          	queue.set(message.guild.id, queueContruct);
+      
+          	queueContruct.songs.push(song);
+      
+          	try {
+            	var connection = await voiceChannel.join();
+            	queueContruct.connection = connection;
+            	play(message.guild, queueContruct.songs[0]);
+          	} catch (err) {
+            	console.log(err);
+            	queue.delete(message.guild.id);
+            	return message.channel.send(err);
+          	}
+        } else {
+            serverQueue.songs.push(song);
+            return message.channel.send(`${song.title} has been added to the queue!`);
+        }
+      
+      	function play(guild, song) {
+        	const serverQueue = queue.get(guild.id);
+        	if (!song) {
+            	serverQueue.voiceChannel.leave();
+            	queue.delete(guild.id);
+            	return;
+        	}
+      
+        	const dispatcher = serverQueue.connection
+            	.play(ytdl(song.url))
+            	.on("finish", () => {
+            	serverQueue.songs.shift();
+            	play(guild, serverQueue.songs[0]);
+            })
+            .on("error", error => console.error(error));
+        	dispatcher.setVolumeLogarithmic(serverQueue.volume / 9.5);
+        	serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+        }
+    
+    }
+          //we did it bois
+    
+    
+
     if (command == "motivation") {       
         message.channel.send(motivational[Math.floor(Math.random() * 25)]);
     
@@ -107,18 +205,23 @@ client.on('message', message => {
 		}
 	}
     //time commands
-	if (command == "time") {
-		message.channel.send(Date());
-		var date = Date().split(" ");
-		var time = date[4];
-		message.channel.send(Date());
+	if (command[0] == "time") {
+		function testTime() {
+			announceChannel.send(command[1]);
+			a1.stop();
+		}
+		let a1 = new cron.CronJob(command[4]+" "+command[3]+" "+command[2]+" * * *", testTime);
+		a1.start();
+		message.channel.send("Set announcement at "+command[2]+":"+command[3]+":"+command[4]);
 	}
     //announcement channel commands
-    /*if (command[0] == 'set') {
+    if (command[0] == 'set') {
         if (command[1] == 'announcement') {
-
+            if (command[2] == "daily") {
+                dailyevents.push(command[3]);
+            }
         }
-    }*/
+    }
 
     /*if (command === "kick") {
         const userKicked = message.mentions.members.first();
