@@ -8,7 +8,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 const violaters = [];
 
-const { prefix, swearWords } = require('./config.json');
+const { prefix, swearWords, motivational } = require('./config.json');
 
 client.commands = new Discord.Collection();
 
@@ -16,9 +16,9 @@ client.once('ready', () => {
 	console.log('Ready!');
 });
 
-client.on('message', message => {
-    //If the message doesn't start with prefix it exits 
+var recordChannel, recordList, recordNums;
 
+client.on('message', message => {
 	// private dms people
     /*
 	const user = client.users.cache.get(message.author.id);
@@ -35,33 +35,55 @@ client.on('message', message => {
 
     
     for (var i = 0; i < stuff; i++) {
-        console.log(message.author.id)
-        console.log(violaters)
 		if (stuffer.includes(swearWords[i])) {
 			message.delete();
 			message.reply('Explicit language is not tolerated in our server.');
+            /*
             if (violaters.includes(message.author.id)) {
-				console.log("Should kick");
                 message.author.id.kick();
             } else {
                 violaters.push(message.author.id);
-                console.log(violaters);
+            
                 break;
-        	}
+        	}*/
 		}
 	}
     console.log(message.content);
+
+
+
+    //If the message doesn't start with prefix it exits 
     if (!message.content.startsWith(prefix) || message.author.bot) return;
    
     const args = message.content.slice(prefix.length).trim().split(' ');
 	const command = args.shift().toLowerCase();
     
-    if (command === "feng") {
-        message.channel.send('your bad');
+    //commands 
+    if (command === "motivation") {       
+        message.channel.send(motivational[Math.floor(Math.random() * 20)]);
+    
     }
-    if (command === "motivation") {
-        message.channel.send('https://bit.ly/3hZdGLx');
-    }
+    if (command === "memes") {       
+        message.channel.send(memery[Math.floor(Math.random() * 20)]);
+    
+    } 
+    if (command == "setchannel") {
+		recordChannel = client.channels.cache.get(message.channel.id);
+		recordChannel.send('Channel set!');
+	}
+	if (command == "showrecords") {
+		try {
+			recordChannel.send('Should show records');
+		} catch {
+			message.reply('Channel has not been set or has been deleted!');
+		}
+	}
+
+    /*if (command === "kick") {
+        const userKicked = message.mentions.members.first();
+        userKicked.kick();
+        message.channel.send(`You kicked: ${taggedUser.username}`)
+    }*/
 
 });
 
