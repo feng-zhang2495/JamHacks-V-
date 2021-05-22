@@ -10,7 +10,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 
-const { prefix, swearWords, motivational, memery, phrases } = require('./config.json');
+const { prefix, swearWords, motivational, memery, phrases, eightBall } = require('./config.json');
 
 client.commands = new Discord.Collection();
 
@@ -78,9 +78,13 @@ client.on('message', message => {
     //commands 
  
 
-    
+    client.user.setActivity("Type ?Help to get some help, because you know you need it", {
+        type: "STREAMING, LIVE!",
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      });
+      
     if (message.content.includes('?')) {
-        if (Math.floor(Math.random() * 20) < 1) {
+        if (Math.floor(Math.random() * 100) < 1) {
             message.channel.send(phrases[Math.floor(Math.random() * 7)]);
             return;
         }
@@ -188,8 +192,8 @@ client.on('message', message => {
             announceChannel = client.channels.cache.get(message.channel.id);
 			announceChannel.send('Announcements Channel set!');
         }
-	}
-    /*if (command == "set") {
+	}/*
+    if (command == "set") {
 		recordChannel = client.channels.cache.get(message.channel.id);
 		recordChannel.send('Channel set!');
 	}*/
@@ -205,31 +209,75 @@ client.on('message', message => {
 		}
 	}
     //time commands
-	if (command[0] == "time") {
-		function testTime() {
-			announceChannel.send(command[1]);
+	if (command[0] == "time" || command[0] == "daily") {
+		const commander = command.map((x) => x);
+        function testTime() {
+            for(var q = 0; q < 4; q++) {
+				commander.shift();
+			}
+			announceChannel.send(commander.join(" "));
 			a1.stop();
 		}
-		let a1 = new cron.CronJob(command[4]+" "+command[3]+" "+command[2]+" * * *", testTime);
+		let a1 = new cron.CronJob(commander[3]+" "+commander[2]+" "+commander[1]+" * * *", testTime);
 		a1.start();
-		message.channel.send("Set announcement at "+command[2]+":"+command[3]+":"+command[4]);
+		message.channel.send("Announcement set at "+commander[1]+":"+commander[2]+":"+commander[3]);
 	}
-    //announcement channel commands
-    if (command[0] == 'set') {
-        if (command[1] == 'announcement') {
-            if (command[2] == "daily") {
-                dailyevents.push(command[3]);
-            }
-        }
-    }
-
+    /*
+    if (command[0] == "weekly") {
+        const 
+    } 
+    */
     /*if (command === "kick") {
         const userKicked = message.mentions.members.first();
         userKicked.kick();
         message.channel.send(`You kicked: ${taggedUser.username}`)
     }*/
+    
+    if (command[0] == '8ball') {
+        message.react('🎱')
+        if (command[1] == undefined) {
+            message.reply('What do you want?')
+        } else if (command[command.length - 1].includes("?")) {
+            message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 7)]);
+        } else { 
+        message.reply('Please enter a question');    
+        }
+    }
 
+    
+    if (command[0] == 'help') {
+
+        if (command[1] == undefined) {
+            message.channel.send('Commands:\nmotivation, memes, 8ball, play, set records, records, set announcements, time, daily\n\nPlease enter "?help <command name>" to get specific details.');
+        } else if (command[1] == 'motivation') {
+            message.channel.send('Use this command to send motivational pictures')
+        }
+        else if (command[1] == 'memes') {
+            message.channel.send('Use this command to send a wide variety of memes')
+        }
+        else if (command[1] == '8ball') {
+            message.channel.send('Ask a question to the 8ball and get an answer')
+        }
+        else if (command[1] == 'play') {
+            message.channel.send('Enter "?play <youtube-url-here>" while in an voice channel, to play the audio from the video in the Voice Channel')
+        }
+        else if (command[1] == 'set' && command[2] == 'records') {
+            message.channel.send('Set a channel for the bot to send its record logs too')
+        }
+        else if (command[1] == 'records') {
+                message.channel.send('Have the bot send the records of users and their warnings to the set records channel')
+        }
+        else if (command[1] == 'set'  && command[2] == 'announcements') {
+            message.channel.send('Sets the announcements channel')
+        }
+        else if (command[1] == 'time') {
+            message.channel.send('Send an announcement to the announcements channel at a certain time e.g. ?time hour minuite second message, EX. ?time 18 22 00 hello\nThis will print announcement set at 18 22 00')
+        }
+    
+    
+}
 });
 
 
 client.login(process.env.TOKEN);
+
