@@ -17,7 +17,11 @@
   },
   "homepage": "https://github.com/feng-zhang2495/JamHacks-V-#readme",
   "dependencies": {
+    "@discordjs/opus": "^0.5.0",
     "discord.js": "^12.5.3",
-    "dotenv": "^10.0.0"
+    "dotenv": "^10.0.0",
+    "ffmpeg": "0.0.4",
+    "fluent-ffmpeg": "^2.1.2",
+    "ytdl-core": "^4.8.0"
   }
 }

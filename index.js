@@ -6,19 +6,26 @@ const client = new Discord.Client();
 
 const dotenv = require('dotenv');
 dotenv.config();
-const violaters = [];
 
-const { prefix, swearWords, motivational } = require('./config.json');
+
+const { prefix, swearWords, motivational, memery } = require('./config.json');
 
 client.commands = new Discord.Collection();
+
 
 client.once('ready', () => {
 	console.log('Ready!');
 });
 
-var recordChannel, recordList, recordNums;
+
+var recordChannel;
+var announceChannel;
+const recordUsers = [];
+const recordNums = [];
 
 client.on('message', message => {
+    //if the message is from the bot exit
+    if (message.author.bot) return;
 	// private dms people
     /*
 	const user = client.users.cache.get(message.author.id);
@@ -36,16 +43,15 @@ client.on('message', message => {
     
     for (var i = 0; i < stuff; i++) {
 		if (stuffer.includes(swearWords[i])) {
+			swearingUser = message.author.username
 			message.delete();
 			message.reply('Explicit language is not tolerated in our server.');
-            /*
-            if (violaters.includes(message.author.id)) {
-                message.author.id.kick();
-            } else {
-                violaters.push(message.author.id);
-            
-                break;
-        	}*/
+            if (!recordUsers.includes(swearingUser)) {
+                recordUsers.push(swearingUser);
+				recordNums.push(0);
+        	}
+			recordNums[recordUsers.indexOf(swearingUser)]++;
+			break;
 		}
 	}
     console.log(message.content);
@@ -56,28 +62,63 @@ client.on('message', message => {
     if (!message.content.startsWith(prefix) || message.author.bot) return;
    
     const args = message.content.slice(prefix.length).trim().split(' ');
-	const command = args.shift().toLowerCase();
-    
+	const command = args.map(x => x.toLowerCase());
+    /*if (!client.commands.has(command)) return;
+
+	try {
+		client.commands.get(command).execute(message, args);
+	} catch (error) {
+		console.error(error);
+		message.reply('there was an error trying to execute that command!');
+	}*/
+
     //commands 
-    if (command === "motivation") {       
-        message.channel.send(motivational[Math.floor(Math.random() * 20)]);
+    if (command == "motivation") {       
+        message.channel.send(motivational[Math.floor(Math.random() * 25)]);
     
     }
-    if (command === "memes") {       
+    if (command == "memes") {       
         message.channel.send(memery[Math.floor(Math.random() * 20)]);
     
     } 
-    if (command == "setchannel") {
+    //channel setters
+	if (command[0] == "set") {
+		if (command[1] == "records") {
+			recordChannel = client.channels.cache.get(message.channel.id);
+			recordChannel.send('Record Channel set!');
+        } else if(command[1] == "announcements") {
+            announceChannel = client.channels.cache.get(message.channel.id);
+			announceChannel.send('Announcements Channel set!');
+        }
+	}
+    /*if (command == "set") {
 		recordChannel = client.channels.cache.get(message.channel.id);
 		recordChannel.send('Channel set!');
-	}
-	if (command == "showrecords") {
+	}*/
+    //record channel commands
+	if (command == "records") {
 		try {
-			recordChannel.send('Should show records');
+			recordChannel.send("RECORDLIST");
+			for(var i = 0; i < recordUsers.length; i++) {
+				recordChannel.send(recordUsers[i]+", "+recordNums[i]);
+			}
 		} catch {
-			message.reply('Channel has not been set or has been deleted!');
+			message.channel.send('Channel has not been set or has been deleted!');
 		}
 	}
+    //time commands
+	if (command == "time") {
+		message.channel.send(Date());
+		var date = Date().split(" ");
+		var time = date[4];
+		message.channel.send(Date());
+	}
+    //announcement channel commands
+    /*if (command[0] == 'set') {
+        if (command[1] == 'announcement') {
+
+        }
+    }*/
 
     /*if (command === "kick") {
         const userKicked = message.mentions.members.first();
