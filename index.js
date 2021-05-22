@@ -20,16 +20,34 @@ client.once('ready', () => {
 client.on('message', message => {
     //If the message doesn't start with prefix it exits 
 
-    message.reply(message.author);
+	// private dms people
+    /*
+	const user = client.users.cache.get(message.author.id);
+	user.send("hi");
+	*/
+    //find channel and send to specific channel
+	/*
+	const channel = client.channels.cache.get(message.author.id);
+	channel.send('content');
+	*/
 
     const stuff = swearWords.length;
     const stuffer = message.content.split(' ');
+    const violaters = [];
 
+    
     for (var i = 0; i < stuff; i++) {
 		if (stuffer.includes(swearWords[i])) {
 			message.delete();
-			message.reply('Explicit language is not tolerated in our server.');
-			return;
+			message.reply('Explicit language is not tolerated in our server. Further violations will result in a server kick.');
+            if violaters.includes(message.author.id):
+                user.kick();
+            else:
+                violaters.push(message.author.id);
+            
+
+
+            return;
         }
 	}
     
@@ -42,7 +60,6 @@ client.on('message', message => {
     if (command === "feng") {
         message.channel.send('your bad');
     }
-
 
 });
 
