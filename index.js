@@ -254,6 +254,7 @@ client.on('message', message => {
 
 
 var urla;
+var videolength;
 async function execute(message, serverQueue) {
     const secondArgs = message.content.split(" ");
     secondArgs.shift();
@@ -275,6 +276,7 @@ async function execute(message, serverQueue) {
     const videos = r.videos.slice( 0, 1 );
     videos.forEach( function ( v ) {
 	urla = v.url;
+    videolength = v.timestamp
     });
     
     const songInfo = await ytdl.getInfo(urla);
@@ -352,7 +354,7 @@ function play(guild, song) {
         })
         .on("error", error => console.error(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`I'm playing: **${song.title}** ${urla}`);
+    serverQueue.textChannel.send(`I'm playing: **${song.title} || ${videolength}** ${urla}`);
     
 }
 
