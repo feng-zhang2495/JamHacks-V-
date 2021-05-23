@@ -9,7 +9,6 @@ const queue = new Map();
 const dotenv = require('dotenv');
 dotenv.config();
 const yts = require( 'yt-search' )
-const google = require('google')
 
 const { prefix, swearWords, motivational, memery, phrases, eightBall } = require('./config.json');
 
@@ -49,34 +48,19 @@ client.on('message', message => {
 	const channel = client.channels.cache.get(message.author.id);
 	channel.send('content');
 	*/
-    if (/!search/.test(message.content)) {
-        // remove the suffix
-        const search = message.content.replace('!search ', '');
-            
-        google('node.js best practices', (err, res) => {
-        if (err) console.error(err)
     
-        for (var i = 0; i < res.links.length; ++i) {
-            var link = res.links[i];
-
-            // At this point, you should see your data and just have to format your embed
-            console.log(link.title + ' - ' + link.href)
-            console.log(link.description + "\n")
-        }
-        })
-    }
         
     
       
     const stuff = swearWords.length;
-    const stuffer = message.content.split(' ');
-
     
+
     for (var i = 0; i < stuff; i++) {
+        const stuffer = message.content.split(' ');
 		if (stuffer.includes(swearWords[i])) {
 			swearingUser = message.author.username
 			message.delete();
-			message.reply('Explicit language is not tolerated in our server.');
+			message.reply('Explicit language is not tolerated in this server.');
             if (!recordUsers.includes(swearingUser)) {
                 recordUsers.push(swearingUser);
 				recordNums.push(0);
@@ -99,7 +83,7 @@ client.on('message', message => {
     //commands
     if (message.content.includes(`${prefix}`)) {
         if (Math.floor(Math.random() * 100) < 1) {
-            message.channel.send(phrases[Math.floor(Math.random() * 7)]);
+            message.channel.send(phrases[Math.floor(Math.random() * 6)]);
             return;
         }
     }
@@ -126,14 +110,14 @@ client.on('message', message => {
     //MOTIVATION
     else if (command == "motivation") {       
         message.channel.send(motivational[Math.floor(Math.random() * 25)]);
-    
     }
+
 
     //MEMES
     else if (command == "memes") {       
         message.channel.send(memery[Math.floor(Math.random() * 20)]);
-    
     } 
+
 
     //CHANNEL SETTERS
 	else if (command[0] == "set") {
@@ -156,12 +140,12 @@ client.on('message', message => {
     //RECORD CHANNEL EVENTS
 	else if (command == "records") {
 		try {
-			recordChannel.send("RECORDLIST");
+			recordChannel.send("Swear word wall of shame:");
 			for(var i = 0; i < recordUsers.length; i++) {
 				recordChannel.send(recordUsers[i]+", "+recordNums[i]);
 			}
 		} catch {
-			message.channel.send('Channel has not been set or has been deleted!');
+			message.channel.send('Records channel has not been set or has been deleted!');
 		}
 	}
     
@@ -182,7 +166,12 @@ client.on('message', message => {
 		a1.start();
 		message.channel.send("Announcement set at "+commander[1]+":"+commander[2]+":"+commander[3]);
 	}*/
-    else if (command[0] == "announce") {
+    
+    testAnnounce: if (command[0] == "announce") {
+        if (announceChannel == undefined) {
+            message.channel.send(`You must specify an announcements channel, you can do this by typing ${prefix}set announcements in the desired channel.`)
+            break testAnnounce;
+        }
 		const announcementName = command[1];
 		const commander = command.map(x => x);
         function testTime() {
@@ -190,7 +179,11 @@ client.on('message', message => {
             for(var q = 0; q < 6; q++) {
 				commander.shift();
 			}
-			announceChannel.send(commander.join(" "));
+            try {
+                announceChannel.send(commander.join(" "));
+            } catch {
+                message.channel.send(`You must specify an announcements channel, you can do this by typing ${prefix}set announcements in the desired channel.`)
+            }
 			if (commanderHold[1] == "once") {
 				a1.stop();
 			}
@@ -213,7 +206,7 @@ client.on('message', message => {
     else if (command[0] == '8ball') {
         message.react('🎱')
         if (command[1] == undefined) {
-            message.reply('What do you want?')
+            message.reply('Ask a question and come back.')
         } else if (command[command.length - 1].includes(`${prefix}`)) {
             message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 8)]);
         } else { 
@@ -323,8 +316,8 @@ async function execute(message, serverQueue) {
     const secondArgs = message.content.split(" ");
     secondArgs.shift();
     
-    const angus = message.content.slice(prefix.length).trim().split(' ');
-	const cordor = args.map(x => x.toLowerCase());
+    /*const angus = message.content.slice(prefix.length).trim().split(' ');
+	const cordor = angus.map(x => x.toLowerCase());*/
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
@@ -379,14 +372,14 @@ async function execute(message, serverQueue) {
         serverQueue.songs.push(song);
         return message.channel.send(`${song.title} has been added to the queue!`);
     }
+    /*
     if (cordor[0] == "poll") {
         const polaroid = condor.shift();
         if (polaroid.map(x => x.toLowerCase()) == "end") {    
             polling = false;
             message.channel.send("Current poll has ended.");
         } else {
-        msg = await message.channel.send(polaroid + "\nplease private dm me with your response in the form '?vote A, B, C, etc.'"); 
-            console.log(msg);
+        msg = await message.channel.send(polaroid + "\nplease private dm me with your response in the form '?vote A, B, C, etc.'");
             polling = true;
         }
     }
@@ -421,7 +414,7 @@ async function execute(message, serverQueue) {
         } else {
             person.send("There are no polls currently active.");
         }
-    }
+    } */
 }
 
 function skip(message, serverQueue) {
