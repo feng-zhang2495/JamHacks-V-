@@ -1,0 +1,1 @@
+FFMPEG, Discord.js, ytdl, yt-search, dotenv, cron

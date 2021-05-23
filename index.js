@@ -9,25 +9,32 @@ const queue = new Map();
 const dotenv = require('dotenv');
 dotenv.config();
 const yts = require( 'yt-search' )
+const google = require('google')
 
 const { prefix, swearWords, motivational, memery, phrases, eightBall } = require('./config.json');
 
 client.commands = new Discord.Collection();
 
 
+
+
+
 client.on('ready', () => {
 	console.log('Ready!');
-    client.user.setActivity("Type ?Help to get some help, because you know you need it");
+    client.user.setActivity(`Type ${prefix}Help to get some help, because you know you need it`);
 });
 
 
 var recordChannel;
 var announceChannel;
 var dayOfWeek;
+var msg;
+var polling = false;
 const recordUsers = [];
 const recordNums = [];
 const dailyevents = [];
-//const alreadyPolled = [];
+const voters = [0, 0, 0, 0];
+const alreadyPolled = [];
 
 client.on('message', message => {
     //if the message is from the bot exit
@@ -42,7 +49,25 @@ client.on('message', message => {
 	const channel = client.channels.cache.get(message.author.id);
 	channel.send('content');
 	*/
+    if (/!search/.test(message.content)) {
+        // remove the suffix
+        const search = message.content.replace('!search ', '');
+            
+        google('node.js best practices', (err, res) => {
+        if (err) console.error(err)
+    
+        for (var i = 0; i < res.links.length; ++i) {
+            var link = res.links[i];
 
+            // At this point, you should see your data and just have to format your embed
+            console.log(link.title + ' - ' + link.href)
+            console.log(link.description + "\n")
+        }
+        })
+    }
+        
+    
+      
     const stuff = swearWords.length;
     const stuffer = message.content.split(' ');
 
@@ -72,12 +97,13 @@ client.on('message', message => {
     
 
     //commands
-    if (message.content.includes('?')) {
+    if (message.content.includes(`${prefix}`)) {
         if (Math.floor(Math.random() * 100) < 1) {
             message.channel.send(phrases[Math.floor(Math.random() * 7)]);
             return;
         }
     }
+    
     
 
     //MUSIC COMMANDS
@@ -94,6 +120,7 @@ client.on('message', message => {
 		return;
 	} 
     
+    //POLLING
     
     
     //MOTIVATION
@@ -164,12 +191,12 @@ client.on('message', message => {
 				commander.shift();
 			}
 			announceChannel.send(commander.join(" "));
-			if (commanderHold[2] == "once") {
+			if (commanderHold[1] == "once") {
 				a1.stop();
 			}
 		}
 		var dayOfWeek = "*";
-		if (commander[2] == "once" || commander[2] == "daily") {
+		if (commander[1] == "once" || commander[1] == "daily") {
 			dayOfWeek = commander[2].split(" ").join(",");
 		}
 		let a1 = new cron.CronJob(commander[5]+" "+commander[4]+" "+commander[3]+" * * "+dayOfWeek, testTime);
@@ -180,18 +207,14 @@ client.on('message', message => {
     if (
     } 
     */
-    if (command[0] === "kick") {
-        const userKicked = message.mentions.members.first();
-        userKicked.kick();
-        message.channel.send(`You kicked ${userKicked}`)
-    }
+    
     
     //8BALL 
     else if (command[0] == '8ball') {
         message.react('🎱')
         if (command[1] == undefined) {
             message.reply('What do you want?')
-        } else if (command[command.length - 1].includes("?")) {
+        } else if (command[command.length - 1].includes(`${prefix}`)) {
             message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 8)]);
         } else { 
         message.reply('Please enter a question');    
@@ -206,10 +229,21 @@ client.on('message', message => {
     //HELP
     else if (command[0] == 'help') {
         if (command[1] == undefined) {
-            message.channel.send('Commands:\nmotivation, memes, 8ball, play, skip, stop, set records, records, set announcements, time, daily, date\n\nPlease enter "?help <command name>" to get specific details.');
+            message.channel.send(`Commands:\nmotivation, memes, 8ball, play, skip, stop, set records, records, set announcements, announce (once, daily, weekly) date\n\nPlease enter "${prefix}help <command name>" to get specific details.`);
         } else if (command[1] == 'motivation') {
-            message.channel.send('Use this command to send motivational pictures')
+            message.channel.send({
+                embed: {"title": "This sends you motivational pictures",
+                "description": "this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```",
+                "url": "https://discordapp.com",
+                "color": 4493432,
+                "timestamp": "2021-05-23T04:23:14.687Z",
+                "footer": {
+                  "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
+                  "text": "footer text"
+                }
         }
+    })
+}
         else if (command[1] == 'memes') {
             message.channel.send('Use this command to send a wide variety of memes')
         }
@@ -217,7 +251,7 @@ client.on('message', message => {
             message.channel.send('Ask a question to the 8ball and get an answer')
         }
         else if (command[1] == 'play') {
-            message.channel.send('Enter "?play <youtube-url-here>" while in an voice channel, to play the audio from the video in the Voice Channel')
+            message.channel.send(`Enter "${prefix}play <youtube-url-here>" OR "${prefix}play <song name>" while in an voice channel, to play the audio from the video in the Voice Channel`)
         }
         else if (command[1] == 'skip') {
             message.channel.send('Skips the current song in the queue.')
@@ -234,19 +268,63 @@ client.on('message', message => {
         else if (command[1] == 'set'  && command[2] == 'announcements') {
             message.channel.send('Sets the announcements channel')
         }
-        else if (command[1] == 'time') {
-            message.channel.send('Send an announcement to the announcements channel at a certain time, e.g. ?time hour minuite second message, EX. ?time 18 22 00 hello\nThis will print an announcement set at 18 22 00 that says hello')
-        }
         else if (command[1] == 'date') {
             message.channel.send('Sends the current date')
         }
+        else if (command [1] == 'announce') {
+            if (command [2] == undefined) {
+                message.channel.send('which announce would you like help with, once, daily, weekly?')
+            }
+            else if (command[2] == 'once') {
+                message.channel.send(`Send an announcement to the announcements channel at a certain time, e.g. ${prefix}announce announcementname once hour minuite second message, EX. ${prefix}announce name once 18 22 00 hello\nThis will print an announcement set at 18 22 00 that says hello`)
+            }
+            else if (command[2] == 'daily') {
+                message.channel.send(`Sends a daily announcement to the announcements channel at the set time e.g. ${prefix}announce announcementname daily hour minuite second message, EX. ${prefix}announce name daily 18 22 00 hello\nThis will print an daily announcement set at 18 22 00 that says hello`)
+            }
+            else if (command[2] == 'weekly') {
+                message.channel.send(`Sends a daily announcement to the announcements channel at the set time e.g. ${prefix}announce announcementname daynumber (Monday 1, Tuesday 2, ... Sunday 7) hour minuite second message, EX. ${prefix}announce name 6 18 22 00 hello\nThis will print an announcement every Saturday set at 18 22 00 that says hello`)
+            }
+        }
+       
     }
 });
+
+/*else if (command[0] == "poll") {
+    const commandore = command;
+    const ups = 0;
+    const downs = 0;
+    command.shift();
+    const menaga = message.channel.send(command);
+    const filter = (reaction, user) => {
+        return ['👍', '👎'].includes(reaction.emoji.name) && user.id === message.author.id;
+    };
+
+    
+    console.log(user);
+    console.log(reaction);
+    if (!alreadyPolled.includes(user)) {
+        if (reaction.emoji.name === '👍') {
+            ups++;
+            alreadyPolled.push(user);
+            console.log(ups);
+        } else if (reaction.emoji.name === '👎') {
+            downs++;
+            alreadyPolled.push(user);
+            console.log(downs);            }
+        }
+    } else {
+        user.send("Don't do that again. You've been warned.");        
+    }
+message.reactions.removeAll();
+menaga.edit(command + "\nfor: " + str(ups) + "\nagainst: " + str(downs));  */
 
 var urla;
 async function execute(message, serverQueue) {
     const secondArgs = message.content.split(" ");
     secondArgs.shift();
+    
+    const angus = message.content.slice(prefix.length).trim().split(' ');
+	const cordor = args.map(x => x.toLowerCase());
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
@@ -301,6 +379,49 @@ async function execute(message, serverQueue) {
         serverQueue.songs.push(song);
         return message.channel.send(`${song.title} has been added to the queue!`);
     }
+    if (cordor[0] == "poll") {
+        const polaroid = condor.shift();
+        if (polaroid.map(x => x.toLowerCase()) == "end") {    
+            polling = false;
+            message.channel.send("Current poll has ended.");
+        } else {
+        msg = await message.channel.send(polaroid + "\nplease private dm me with your response in the form '?vote A, B, C, etc.'"); 
+            console.log(msg);
+            polling = true;
+        }
+    }
+    else if (cordor[0] == "vote") {
+        const person = message.author.id;
+        if (polling == true) { 
+            if (alreadyPolled.includes(person)) {
+                person.send("I'm sorry, but you've already voted.");
+            } else if (cordor[1].map(x => x.toLowerCase()) == "a") {
+                voters[0] += 1;
+                alreadyPolled.push(person);
+                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
+                message.channel.send("Vote received!");
+            } else if (cordor[1].map(x => x.toLowerCase()) == "b") {
+                voters[1] += 1;
+                alreadyPolled.push(person);
+                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
+                message.channel.send("Vote received!");
+            } else if (cordor[1].map(x => x.toLowerCase()) == "c") {
+                voters[2] += 1;
+                alreadyPolled.push(person);
+                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
+                message.channel.send("Vote received!");
+            } else if (cordor[1].map(x => x.toLowerCase()) == "d") {
+                voters[3] += 1;
+                alreadyPolled.push(person);
+                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
+                message.channel.send("Vote received!");
+            } else {
+                person.send("I'm sorry, that's not one of the options.");
+            }
+        } else {
+            person.send("There are no polls currently active.");
+        }
+    }
 }
 
 function skip(message, serverQueue) {
@@ -343,52 +464,8 @@ function play(guild, song) {
         .on("error", error => console.error(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Start playing: **${song.title}** ${urla}`);
+    
 }
-
-/*if (command[0] == "poll") {
-    const commandore = command;
-    const ups = 0;
-    const downs = 0;
-    command.shift();
-    const menaga = message.channel.send(command + "");
-    message.awaitReactions(reaction, user) {
-        if {
-                
-        } elif (reaction.emoji.name === '👍') {
-            ups++;
-            alreadyPolled.push(user);
-        } else if reaction.emoji.name === '👎'{
-            downs++;
-            alreadyPolled.push(user);
-        } else {
-            user.send("Don't do that again. You've been warned.");
-            
-        }    
-    }
-     
-    
-
-    }
-const filter = (reaction, user) => {
-	return ['👍', '👎'].includes(reaction.emoji.name) && user.id === message.author.id;
-};
-
-message.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
-	.then(collected => {
-		const reaction = collected.first();
-
-		if (reaction.emoji.name === '👍') {
-			message.reply('you reacted with a thumbs up.');
-		} else {
-			message.reply('you reacted with a thumbs down.');
-		}
-	})
-	.catch(collected => {
-		message.reply('you reacted with neither a thumbs up, nor a thumbs down.');
-	});
-#
-    
-} */
 
 
 client.login(process.env.TOKEN);
