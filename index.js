@@ -105,10 +105,7 @@ client.on('message', message => {
 
     //CHANNEL SETTERS
 	else if (command[0] == "set") {
-		if (command[1] == "records") {
-			recordChannel = client.channels.cache.get(message.channel.id);
-			recordChannel.send('Record Channel set!');
-        } else if(command[1] == "announcements") {
+        if(command[1] == "announcements") {
             announceChannel = client.channels.cache.get(message.channel.id);
 			announceChannel.send('Announcements Channel set!');
         }
@@ -117,21 +114,16 @@ client.on('message', message => {
 
     //RECORD CHANNEL EVENTS
 	else if (command == "records") {
-		try {
-			recordChannel.send("Swear word wall of shame:");
-			for(var i = 0; i < recordUsers.length; i++) {
-				recordChannel.send(recordUsers[i]+", "+recordNums[i]);
-			}
-		} catch {
-			message.channel.send('Records channel has not been set or has been deleted!');
-		}
+        message.channel.send("Swear word wall of shame:");
+        for(var i = 0; i < recordUsers.length; i++) {
+            message.channel.send(recordUsers[i]+", "+recordNums[i]);
+        }
 	}
     
     //ANNOUNCE
     testAnnounce: if (command[0] == "announce") {
         if (announceChannel == undefined) {
-            message.channel.send(`You must specify an announcements channel, you can do this by typing ${prefix}set announcements in the desired channel.`)
-            break testAnnounce;
+            message.channel.send(`Note: You have not specified an announcements channel, so this channel will be used`);
         }
 		const announcementName = command[1];
 		const commander = command.map(x => x);
@@ -143,7 +135,7 @@ client.on('message', message => {
             try {
                 announceChannel.send(commander.join(" "));
             } catch {
-                message.channel.send(`You must specify an announcements channel, you can do this by typing ${prefix}set announcements in the desired channel.`)
+                message.channel.send(commander.join(" "));
             }
 			if (commanderHold[1] == "once") {
 				a1.stop();
@@ -196,17 +188,15 @@ client.on('message', message => {
     //HELP
     else if (command[0] == 'help') {
         if (command[1] == undefined) {
-
             message.channel.send({
                 embed: {"title": "List of Bot Commands",
-                "description": '**Utility:\nset records, records, set announcements, announce (once, daily, weekly) <date>**\n\n**Fun:\nmemes, 8ball, motivation\n\nMusic:\nplay, skip, stop\n\nEnter "**'+prefix+'**help <command name>" to get specific details.**',
+                "description": '**Utility:\nrecords, set announcements, announce (once, daily, weekly) <date>**\n\n**Fun:\nmemes, 8ball, motivation\n\nMusic:\nplay, skip, stop\n\nEnter "**'+prefix+'**help <command name>" to get specific details.**',
                 "color": 4493432,
-        }
-    })
-
+                }
+            })
         } else if (command[1] == 'motivation') {
             message.channel.send('Use this command to send a wide variety of motivational pictures')
-}
+        }
         else if (command[1] == 'memes') {
             message.channel.send('Use this command to send a wide variety of memes')
         }
@@ -221,9 +211,6 @@ client.on('message', message => {
         }
         else if (command[1] == 'stop') {
             message.channel.send('Makes the bot leave the voice channel and stop playing music.')
-        }
-        else if (command[1] == 'set' && command[2] == 'records') {
-            message.channel.send('Set a channel for the bot to send its record logs too')
         }
         else if (command[1] == 'records') {
                 message.channel.send('Have the bot send the records of users and their warnings to the set records channel')
@@ -248,7 +235,6 @@ client.on('message', message => {
                 message.channel.send(`Sends a daily announcement to the announcements channel at the set time e.g. ${prefix}announce announcementname daynumber (Monday 1, Tuesday 2, ... Sunday 7) hour minuite second message, EX. ${prefix}announce name 6 18 22 00 hello\nThis will print an announcement every Saturday set at 18 22 00 that says hello`)
             }
         }
-       
     }
 });
 
