@@ -8,7 +8,7 @@ const ytdl = require("ytdl-core");
 const queue = new Map();
 const dotenv = require('dotenv');
 dotenv.config();
-
+const yts = require( 'yt-search' )
 
 const { prefix, swearWords, motivational, memery, phrases, eightBall } = require('./config.json');
 
@@ -17,18 +17,17 @@ client.commands = new Discord.Collection();
 
 client.on('ready', () => {
 	console.log('Ready!');
-    client.user.setActivity("Type ?Help to get some help, because you know you need it", {
-        type: "STREAMING, LIVE!",
-        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-      });
+    client.user.setActivity("Type ?Help to get some help, because you know you need it");
 });
 
 
 var recordChannel;
 var announceChannel;
+var dayOfWeek;
 const recordUsers = [];
 const recordNums = [];
 const dailyevents = [];
+//const alreadyPolled = [];
 
 client.on('message', message => {
     //if the message is from the bot exit
@@ -72,10 +71,6 @@ client.on('message', message => {
 	const command = args.map(x => x.toLowerCase());
     
 
-	
-
-     
- 
     //commands
     if (message.content.includes('?')) {
         if (Math.floor(Math.random() * 100) < 1) {
@@ -102,19 +97,19 @@ client.on('message', message => {
     
     
     //MOTIVATION
-    if (command == "motivation") {       
+    else if (command == "motivation") {       
         message.channel.send(motivational[Math.floor(Math.random() * 25)]);
     
     }
 
     //MEMES
-    if (command == "memes") {       
+    else if (command == "memes") {       
         message.channel.send(memery[Math.floor(Math.random() * 20)]);
     
     } 
 
     //CHANNEL SETTERS
-	if (command[0] == "set") {
+	else if (command[0] == "set") {
 		if (command[1] == "records") {
 			recordChannel = client.channels.cache.get(message.channel.id);
 			recordChannel.send('Record Channel set!');
@@ -132,7 +127,7 @@ client.on('message', message => {
 
 
     //RECORD CHANNEL EVENTS
-	if (command == "records") {
+	else if (command == "records") {
 		try {
 			recordChannel.send("RECORDLIST");
 			for(var i = 0; i < recordUsers.length; i++) {
@@ -144,50 +139,72 @@ client.on('message', message => {
 	}
     
     //TIME COMMANDS
-	if (command[0] == "time" || command[0] == "daily") {
-		const commander = command.map((x) => x);
+	/*if (command[0] == "time" || command[0] == "daily") {
+		const commander = command.map(x => x);
         function testTime() {
+			const commanderHold = commander.map(x => x)
             for(var q = 0; q < 4; q++) {
 				commander.shift();
 			}
 			announceChannel.send(commander.join(" "));
-			a1.stop();
+			if (commanderHold[0] == 'time') {
+				a1.stop();
+			}
 		}
 		let a1 = new cron.CronJob(commander[3]+" "+commander[2]+" "+commander[1]+" * * *", testTime);
 		a1.start();
 		message.channel.send("Announcement set at "+commander[1]+":"+commander[2]+":"+commander[3]);
+	}*/
+    else if (command[0] == "announce") {
+		const announcementName = command[1];
+		const commander = command.map(x => x);
+        function testTime() {
+			const commanderHold = commander.map(x => x)
+            for(var q = 0; q < 6; q++) {
+				commander.shift();
+			}
+			announceChannel.send(commander.join(" "));
+			if (commanderHold[2] == "once") {
+				a1.stop();
+			}
+		}
+		var dayOfWeek = "*";
+		if (commander[2] == "once" || commander[2] == "daily") {
+			dayOfWeek = commander[2].split(" ").join(",");
+		}
+		let a1 = new cron.CronJob(commander[5]+" "+commander[4]+" "+commander[3]+" * * "+dayOfWeek, testTime);
+		a1.start();
+		message.channel.send("Announcement set at "+commander[3]+":"+commander[4]+":"+commander[5]);
 	}
-    
     /*
-    if (command[0] == "weekly") {
-        const 
+    if (
     } 
     */
-    /*if (command === "kick") {
+    if (command[0] === "kick") {
         const userKicked = message.mentions.members.first();
         userKicked.kick();
-        message.channel.send(`You kicked: ${taggedUser.username}`)
-    }*/
+        message.channel.send(`You kicked ${userKicked}`)
+    }
     
     //8BALL 
-    if (command[0] == '8ball') {
+    else if (command[0] == '8ball') {
         message.react('🎱')
         if (command[1] == undefined) {
             message.reply('What do you want?')
         } else if (command[command.length - 1].includes("?")) {
-            message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 7)]);
+            message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 8)]);
         } else { 
         message.reply('Please enter a question');    
         }
     }
 
     //DATE 
-	if (command[0] == "date") {
-		message.send(Date());
+	else if (command[0] == "date") {
+		message.channel.send(Date());
 	}
 
     //HELP
-    if (command[0] == 'help') {
+    else if (command[0] == 'help') {
         if (command[1] == undefined) {
             message.channel.send('Commands:\nmotivation, memes, 8ball, play, skip, stop, set records, records, set announcements, time, daily, date\n\nPlease enter "?help <command name>" to get specific details.');
         } else if (command[1] == 'motivation') {
@@ -226,8 +243,10 @@ client.on('message', message => {
     }
 });
 
+var urla;
 async function execute(message, serverQueue) {
     const secondArgs = message.content.split(" ");
+    secondArgs.shift();
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
@@ -241,11 +260,19 @@ async function execute(message, serverQueue) {
         );
     }
 
-    const songInfo = await ytdl.getInfo(secondArgs[1]);
+    const r = await yts(secondArgs.join(' ') );
+    
+    const videos = r.videos.slice( 0, 1 );
+    videos.forEach( function ( v ) {
+	urla = v.url;
+    });
+    
+    const songInfo = await ytdl.getInfo(urla);
     const song = {
         title: songInfo.videoDetails.title,
         url: songInfo.videoDetails.video_url,
     };
+
 
     if (!serverQueue) {
         const queueContruct = {
@@ -315,8 +342,53 @@ function play(guild, song) {
         })
         .on("error", error => console.error(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+    serverQueue.textChannel.send(`Start playing: **${song.title}** ${urla}`);
 }
+
+/*if (command[0] == "poll") {
+    const commandore = command;
+    const ups = 0;
+    const downs = 0;
+    command.shift();
+    const menaga = message.channel.send(command + "");
+    message.awaitReactions(reaction, user) {
+        if {
+                
+        } elif (reaction.emoji.name === '👍') {
+            ups++;
+            alreadyPolled.push(user);
+        } else if reaction.emoji.name === '👎'{
+            downs++;
+            alreadyPolled.push(user);
+        } else {
+            user.send("Don't do that again. You've been warned.");
+            
+        }    
+    }
+     
+    
+
+    }
+const filter = (reaction, user) => {
+	return ['👍', '👎'].includes(reaction.emoji.name) && user.id === message.author.id;
+};
+
+message.awaitReactions(filter, { max: 1, time: 60000, errors: ['time'] })
+	.then(collected => {
+		const reaction = collected.first();
+
+		if (reaction.emoji.name === '👍') {
+			message.reply('you reacted with a thumbs up.');
+		} else {
+			message.reply('you reacted with a thumbs down.');
+		}
+	})
+	.catch(collected => {
+		message.reply('you reacted with neither a thumbs up, nor a thumbs down.');
+	});
+#
+    
+} */
 
 
 client.login(process.env.TOKEN);
