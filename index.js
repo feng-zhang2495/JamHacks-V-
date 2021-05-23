@@ -15,12 +15,9 @@ const { prefix, swearWords, motivational, memery, phrases, eightBall } = require
 client.commands = new Discord.Collection();
 
 
-
-
-
 client.on('ready', () => {
 	console.log('Ready!');
-    client.user.setActivity(`Type ${prefix}Help to get some help, because you know you need it`);
+    client.user.setActivity(`Type ${prefix}Help to get bot functions`);
 });
 
 
@@ -38,20 +35,6 @@ const alreadyPolled = [];
 client.on('message', message => {
     //if the message is from the bot exit
     if (message.author.bot) return;
-	// private dms people
-    /*
-	const user = client.users.cache.get(message.author.id);
-	user.send("hi");
-	*/
-    //find channel and send to specific channel
-	/*
-	const channel = client.channels.cache.get(message.author.id);
-	channel.send('content');
-	*/
-    
-        
-    
-      
     const stuff = swearWords.length;
     
 
@@ -89,10 +72,13 @@ client.on('message', message => {
     }
     
     
-
     //MUSIC COMMANDS
-    const serverQueue = queue.get(message.guild.id);
-    
+    nicetry: try{
+    var serverQueue = queue.get(message.guild.id);
+    }
+    catch{
+        break nicetry;
+    }
     if (message.content.startsWith(`${prefix}play`)) {
 		execute(message, serverQueue);
 		return;
@@ -103,10 +89,8 @@ client.on('message', message => {
 		stop(message, serverQueue);
 		return;
 	} 
-    
-    //POLLING
-    
-    
+
+
     //MOTIVATION
     else if (command == "motivation") {       
         message.channel.send(motivational[Math.floor(Math.random() * 25)]);
@@ -129,12 +113,6 @@ client.on('message', message => {
 			announceChannel.send('Announcements Channel set!');
         }
 	}
-    
-    /*
-    if (command == "set") {
-		recordChannel = client.channels.cache.get(message.channel.id);
-		recordChannel.send('Channel set!');
-	}*/
 
 
     //RECORD CHANNEL EVENTS
@@ -149,24 +127,7 @@ client.on('message', message => {
 		}
 	}
     
-    //TIME COMMANDS
-	/*if (command[0] == "time" || command[0] == "daily") {
-		const commander = command.map(x => x);
-        function testTime() {
-			const commanderHold = commander.map(x => x)
-            for(var q = 0; q < 4; q++) {
-				commander.shift();
-			}
-			announceChannel.send(commander.join(" "));
-			if (commanderHold[0] == 'time') {
-				a1.stop();
-			}
-		}
-		let a1 = new cron.CronJob(commander[3]+" "+commander[2]+" "+commander[1]+" * * *", testTime);
-		a1.start();
-		message.channel.send("Announcement set at "+commander[1]+":"+commander[2]+":"+commander[3]);
-	}*/
-    
+    //ANNOUNCE
     testAnnounce: if (command[0] == "announce") {
         if (announceChannel == undefined) {
             message.channel.send(`You must specify an announcements channel, you can do this by typing ${prefix}set announcements in the desired channel.`)
@@ -188,29 +149,42 @@ client.on('message', message => {
 				a1.stop();
 			}
 		}
-		var dayOfWeek = "*";
+		dayOfWeek = "*";
 		if (commander[1] == "once" || commander[1] == "daily") {
-			dayOfWeek = commander[2].split(" ").join(",");
+			dayOfWeek = commander[2];
 		}
 		let a1 = new cron.CronJob(commander[5]+" "+commander[4]+" "+commander[3]+" * * "+dayOfWeek, testTime);
 		a1.start();
 		message.channel.send("Announcement set at "+commander[3]+":"+commander[4]+":"+commander[5]);
 	}
-    /*
-    if (
-    } 
-    */
-    
     
     //8BALL 
     else if (command[0] == '8ball') {
         message.react('🎱')
         if (command[1] == undefined) {
-            message.reply('Ask a question and come back.')
+            message.reply({
+                embed: {"title": "The mythical 8ball responds:",
+                "description": "Please ask a question and come back.",
+                "color": 4493432,
+            }
+        })
         } else if (command[command.length - 1].includes(`${prefix}`)) {
-            message.reply(':8ball: ' + eightBall[Math.floor(Math.random() * 8)]);
+            message.reply({
+                embed: {"title": "The mythical 8ball responds:",
+                "description": ':8ball: ' + eightBall[Math.floor(Math.random() * 8)],
+                "color": 4493432,
+            }
+        })
+    
+                
+                
         } else { 
-        message.reply('Please enter a question');    
+            message.reply({
+                embed: {"title": "The mythical 8ball responds:",
+                "description": "Please enter a.",
+                "color": 4493432,
+            }
+        })
         }
     }
 
@@ -222,20 +196,16 @@ client.on('message', message => {
     //HELP
     else if (command[0] == 'help') {
         if (command[1] == undefined) {
-            message.channel.send(`Commands:\nmotivation, memes, 8ball, play, skip, stop, set records, records, set announcements, announce (once, daily, weekly) date\n\nPlease enter "${prefix}help <command name>" to get specific details.`);
-        } else if (command[1] == 'motivation') {
+
             message.channel.send({
-                embed: {"title": "This sends you motivational pictures",
-                "description": "this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```",
-                "url": "https://discordapp.com",
+                embed: {"title": "List of Bot Commands",
+                "description": '**Utility:\nset records, records, set announcements, announce (once, daily, weekly) <date>**\n\n**Fun:\nmemes, 8ball, motivation\n\nMusic:\nplay, skip, stop\n\nEnter "**'+prefix+'**help <command name>" to get specific details.**',
                 "color": 4493432,
-                "timestamp": "2021-05-23T04:23:14.687Z",
-                "footer": {
-                  "icon_url": "https://cdn.discordapp.com/embed/avatars/0.png",
-                  "text": "footer text"
-                }
         }
     })
+
+        } else if (command[1] == 'motivation') {
+            message.channel.send('Use this command to send a wide variety of motivational pictures')
 }
         else if (command[1] == 'memes') {
             message.channel.send('Use this command to send a wide variety of memes')
@@ -282,43 +252,12 @@ client.on('message', message => {
     }
 });
 
-/*else if (command[0] == "poll") {
-    const commandore = command;
-    const ups = 0;
-    const downs = 0;
-    command.shift();
-    const menaga = message.channel.send(command);
-    const filter = (reaction, user) => {
-        return ['👍', '👎'].includes(reaction.emoji.name) && user.id === message.author.id;
-    };
-
-    
-    console.log(user);
-    console.log(reaction);
-    if (!alreadyPolled.includes(user)) {
-        if (reaction.emoji.name === '👍') {
-            ups++;
-            alreadyPolled.push(user);
-            console.log(ups);
-        } else if (reaction.emoji.name === '👎') {
-            downs++;
-            alreadyPolled.push(user);
-            console.log(downs);            }
-        }
-    } else {
-        user.send("Don't do that again. You've been warned.");        
-    }
-message.reactions.removeAll();
-menaga.edit(command + "\nfor: " + str(ups) + "\nagainst: " + str(downs));  */
 
 var urla;
 async function execute(message, serverQueue) {
     const secondArgs = message.content.split(" ");
     secondArgs.shift();
     
-    /*const angus = message.content.slice(prefix.length).trim().split(' ');
-	const cordor = angus.map(x => x.toLowerCase());*/
-
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
         return message.channel.send(
@@ -372,49 +311,6 @@ async function execute(message, serverQueue) {
         serverQueue.songs.push(song);
         return message.channel.send(`${song.title} has been added to the queue!`);
     }
-    /*
-    if (cordor[0] == "poll") {
-        const polaroid = condor.shift();
-        if (polaroid.map(x => x.toLowerCase()) == "end") {    
-            polling = false;
-            message.channel.send("Current poll has ended.");
-        } else {
-        msg = await message.channel.send(polaroid + "\nplease private dm me with your response in the form '?vote A, B, C, etc.'");
-            polling = true;
-        }
-    }
-    else if (cordor[0] == "vote") {
-        const person = message.author.id;
-        if (polling == true) { 
-            if (alreadyPolled.includes(person)) {
-                person.send("I'm sorry, but you've already voted.");
-            } else if (cordor[1].map(x => x.toLowerCase()) == "a") {
-                voters[0] += 1;
-                alreadyPolled.push(person);
-                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
-                message.channel.send("Vote received!");
-            } else if (cordor[1].map(x => x.toLowerCase()) == "b") {
-                voters[1] += 1;
-                alreadyPolled.push(person);
-                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
-                message.channel.send("Vote received!");
-            } else if (cordor[1].map(x => x.toLowerCase()) == "c") {
-                voters[2] += 1;
-                alreadyPolled.push(person);
-                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
-                message.channel.send("Vote received!");
-            } else if (cordor[1].map(x => x.toLowerCase()) == "d") {
-                voters[3] += 1;
-                alreadyPolled.push(person);
-                msg.edit(polaroid + "\nA:" + voters[0] + "\nB:" + voters[1] + "\nC:" + voters[2] + "\nD:" + voters[3]);
-                message.channel.send("Vote received!");
-            } else {
-                person.send("I'm sorry, that's not one of the options.");
-            }
-        } else {
-            person.send("There are no polls currently active.");
-        }
-    } */
 }
 
 function skip(message, serverQueue) {
@@ -456,7 +352,7 @@ function play(guild, song) {
         })
         .on("error", error => console.error(error));
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`Start playing: **${song.title}** ${urla}`);
+    serverQueue.textChannel.send(`I'm playing: **${song.title}** ${urla}`);
     
 }
 
