@@ -8,7 +8,7 @@ const ytdl = require("ytdl-core");
 const queue = new Map();
 const dotenv = require('dotenv');
 dotenv.config();
-const yts = require( 'yt-search' )
+const yts = require( 'yt-search' );
 
 const { prefix, swearWords, motivational, memery, phrases, eightBall } = require('./config.json');
 
@@ -173,7 +173,7 @@ client.on('message', message => {
         } else { 
             message.reply({
                 embed: {"title": "The mythical 8ball responds:",
-                "description": "Please enter a.",
+                "description": "Please enter a question.",
                 "color": 4493432,
             }
         })
@@ -345,4 +345,4 @@ function play(guild, song) {
 }
 
 
-client.login(process.env.TOKEN);
+client.login('ODQ1NjkyMzMzNDM3NjE2MTc5.YKkqXA.Jmai74OE8vgSyupdv9eZ3pNoVVg');
